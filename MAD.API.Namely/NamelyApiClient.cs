@@ -12,6 +12,8 @@ namespace MAD.API.Namely
         public string ApiToken { get; }
         public string ApiClientName { get; }
 
+        private readonly JsonSerializer jsonSerializer = new JsonSerializer();
+
         public NamelyApiClient(string apiToken, string apiClientName)
         {
             if (string.IsNullOrEmpty(apiToken))
@@ -31,14 +33,12 @@ namespace MAD.API.Namely
             request.Headers.Add(HttpRequestHeader.Accept, "application/json");
 
             HttpWebResponse response = await request.GetResponseAsync() as HttpWebResponse;
-            string responseJson;
 
             using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+            using (JsonTextReader jr = new JsonTextReader(sr))
             {
-                responseJson = await sr.ReadToEndAsync();
+                return this.jsonSerializer.Deserialize<ReportResponse>(jr);
             }
-
-            return JsonConvert.DeserializeObject<ReportResponse>(responseJson);
         }
     }
 }
